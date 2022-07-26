@@ -1,4 +1,15 @@
 const inquirer = require("inquirer");
+require("dotenv").config();
+const cTable = require('console.table');
+const Model = require("./lib/Model");
+const Department = require("./lib/Department");
+
+const Employee = new Model("employee");
+const Department1 = new Department();
+Department1.selectAll();
+Department1.addDepartment("Math");
+Department1.selectAll();
+
 
 // add employee
 // update employee
@@ -39,28 +50,14 @@ const employeeAdd = () => {
             choices: [], //need this to be dynamically filled from SQL 
             when: (answers) => answers.action === "Add Role"
         },
+        {
+
+        }
 
     ])
 };
 
-var mysql = require('mysql2');
 
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "$Q2Gd$ye9D22dRp#",
-    database: "employee_info"
-});
-
-con.connect(function (err) {
-    if (err) throw err;
-    //Select all customers and return the result object:
-    con.query("SELECT * FROM roles", function (err, result, fields) {
-        if (err) throw err;
-        console.log(result);
-        console.table(result);
-    });
-});
 
 
 
