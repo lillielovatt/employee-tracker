@@ -3,12 +3,23 @@ require("dotenv").config();
 const cTable = require('console.table');
 const Model = require("./lib/Model");
 const Department = require("./lib/Department");
+const Roles = require("./lib/Roles");
+const Employee = require("./lib/Employee");
 
-const Employee = new Model("employee");
-const Department1 = new Department();
-Department1.selectAll();
-Department1.addDepartment("Math");
-Department1.selectAll();
+const Employee2 = new Employee();
+const Roles2 = new Roles();
+const Department2 = new Department();
+
+// Department2.viewAll();
+// Roles2.viewAllRoles();
+
+console.log("16",Department2.allDeptArray());
+
+// Employee2.selectAll();
+// Employee2.addEmployee("Maxwell","Neuer",3);
+// Employee2.selectAll();
+
+
 
 
 // add employee
