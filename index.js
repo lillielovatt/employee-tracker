@@ -1,198 +1,269 @@
-const inquirer = require("inquirer");
+const { prompt } = require("inquirer");
 require("dotenv").config();
 require("console.table");
-
-const Model = require("./lib/Model");
-const Department = require("./lib/Department");
-const Roles = require("./lib/Roles");
-const Employee = require("./lib/Employee");
-
-// const Employee2 = new Employee();
-// const Roles2 = new Roles();
-// const Department2 = new Department();
-
-// async function getAllDeptArray() {
-//     const info = await Department2.allDeptArray();
-//     // console.log(info);
-//     // const newArray = info.map((el) => {
-//     //     const obj = { name: el.name, value: el.id };
-//     //     return obj;
-//     // });
-//     // // .then((token) => token);
-//     // console.log("21", newArray);
-//     // return newArray;
-//     return info;
-// }
-// const x = Department2.allDeptArray();
-// console.log(x);
-
-// async function getAllRolesArray() {
-//     const info = await Roles2.allRolesArray();
-//     // console.log(info);
-//     const newArray = info.map((el) => {
-//         const obj = { name: el.title, value: el.id };
-//         return obj;
-//     });
-//     return newArray;
-// }
-
-// async function getAllEmployeeArray() {
-//     const info = await Employee2.allEmployeeArray();
-//     const newArray = info.map((el) => {
-//         const obj = { name: el.name, value: el.id };
-//         return obj;
-//     });
-//     return newArray;
-// }
+const queries = require("./lib/query");
 
 const startQuestion = () => {
-    return inquirer
-        .prompt([
-            {
-                type: "list",
-                name: "action",
-                message: "What would you like to do?",
-                choices: [
-                    "View All Employees",
-                    "Add Employee",
-                    "Update Employee Role",
-                    "View All Roles",
-                    "Add Role",
-                    "View All Departments",
-                    "Add Department",
-                    "Quit",
-                ],
-                default: "Quit",
+    prompt([
+        {
+            type: "list",
+            name: "action",
+            message: "What would you like to do?",
+            choices: [
+                "View All Employees",
+                "Add Employee",
+                "Update Employee Role",
+                "View All Roles",
+                "Add Role",
+                "View All Departments",
+                "Add Department",
+                "Quit",
+            ],
+            default: "Quit",
+        },
+    ]).then((response) => {
+        const answer = response.action;
+        if (answer === "Add Department") {
+            AddDepartment();
+        } else if (answer === "Add Role") {
+            AddRole();
+        } else if (answer === "Add Employee") {
+            AddEmployee();
+        } else if (answer === "View All Roles") {
+            ViewAllRoles();
+        } else if (answer === "View All Employees") {
+            ViewAllEmployees();
+        } else if (answer === "View All Departments") {
+            ViewAllDepartments();
+        } else if (answer === "Update Employee Role") {
+            UpdateEmployeeRole();
+        } else if (answer === "Quit") {
+            Quit();
+        }
+    });
+};
+
+const ViewAllRoles = () => {
+    queries
+        .ViewAllRolesQuery()
+        .then(([res]) => {
+            const roles = res;
+            console.table(roles);
+        })
+        // start over again after displaying correct info
+        .then(() => startQuestion());
+};
+
+const ViewAllEmployees = () => {
+    queries
+        .ViewAllEmployeesQuery()
+        .then(([res]) => {
+            const employees = res;
+            console.table(employees);
+        })
+        // start over after displaying correct info
+        .then(() => startQuestion());
+};
+
+const ViewAllDepartments = () => {
+    queries
+        .ViewAllDepartmentsQuery()
+        .then(([res]) => {
+            const departments = res;
+            console.table(departments);
+        })
+        // start over after displaying correct info
+        .then(() => startQuestion());
+};
+
+const AddDepartment = () => {
+    prompt([
+        {
+            type: "input",
+            name: "name",
+            message: "Please enter department's name.",
+            validate: (name) => {
+                if (typeof name === "string") {
+                    return true;
+                } else {
+                    console.log("You need to enter a valid name.");
+                    return false;
+                }
             },
-        ])
-        .then((response) => {
-            const answer = response.action;
-            console.log("69", answer);
-            if (answer === "Add Department") {
-                AddDepartment();
-            } else if (answer === "Add Role") {
-                AddRole();
-            } else if (answer === "Add Employee") {
-                AddEmployee();
-            } else if (answer === "View All Employees") {
-                ViewAllEmployees();
-            } else if (answer === "View All Roles") {
-                ViewAllRoles();
-            } else if (answer === "View All Departments") {
-                ViewAllDepartments();
-            } else if (answer === "Update Employee Role") {
-                UpdateEmployeeRole();
-            } else if (answer === "Quit") {
-                Quit();
-            }
+        },
+    ]).then((res) => {
+        const departmentName = res;
+        queries
+            .AddNewDepartmentQuery(departmentName)
+            .then(console.log(departmentName, " was added."))
+            .then(() => startQuestion());
+    });
+};
+
+const AddRole = () => {
+    queries
+        .ViewAllDepartmentsQuery()
+        .then(([res]) => {
+            const depts = res;
+            const choices = depts.map((el) => ({
+                name: el.name,
+                value: el.id,
+            }));
+
+            prompt([
+                {
+                    type: "input",
+                    name: "name",
+                    message: "What's the name of the role?",
+                },
+                {
+                    type: "input",
+                    name: "salary",
+                    message: "What's the salary of the role?",
+                    validate: (salary) => {
+                        if (!isNaN(salary) && salary) {
+                            return true;
+                        } else {
+                            console.log("You need to enter a valid salary.");
+                            return false;
+                        }
+                    },
+                },
+                {
+                    type: "list",
+                    name: "deptId",
+                    message: "Which department does the role belong to?",
+                    choices: choices,
+                },
+            ]);
+        })
+        .then((newRole) => {
+            queries
+                .AddNewRoleQuery(newRole)
+                .then(console.log(newRole, " was added."))
+                .then(() => startQuestion());
         });
 };
 
+const AddEmployee = () => {
+    prompt([
+        {
+            type: "input",
+            name: "firstName",
+            message: "Please enter employee's first name.",
+            validate: (firstName) => {
+                if (typeof firstName === "string") {
+                    return true;
+                } else {
+                    console.log("You need to enter a valid name.");
+                    return false;
+                }
+            },
+        },
+        {
+            type: "input",
+            name: "lastName",
+            message: "Please enter employee's last name.",
+            validate: (lastName) => {
+                if (typeof lastName === "string") {
+                    return true;
+                } else {
+                    console.log("You need to enter a valid name.");
+                    return false;
+                }
+            },
+        },
+    ]).then((res) => {
+        const firstName = res.firstName;
+        const lastName = res.lastName;
 
+        queries.ViewAllRolesQuery().then(([res]) => {
+            let roles = res;
+            const choices = roles.map((el) => ({
+                name: el.title,
+                value: el.id,
+            }));
 
+            prompt({
+                type: "list",
+                name: "roleID",
+                message: "What's the employee's role?",
+                choices: choices,
+            }).then((res) => {
+                const roleID = res.roleID;
+                queries.ViewAllEmployeesQuery().then(([res]) => {
+                    const employees = res;
+                    const choices = employees.map((el) => ({
+                        name: `${el.first_name} ${el.last_name}`,
+                        value: el.id,
+                    }));
 
+                    prompt({
+                        type: "list",
+                        name: "managerID",
+                        message: "Who is their manager?",
+                        choices: choices,
+                    })
+                        .then((res) => {
+                            const employee = {
+                                manager_id: res.managerID,
+                                role_id: roleID,
+                                first_name: firstName,
+                                last_name: lastName,
+                            };
 
+                            queries.AddNewEmployeeQuery(employee);
+                        })
+                        .then(() => console.log(firstName, " was added."))
+                        .then(() => startQuestion());
+                });
+            });
+        });
+    });
+};
 
+const UpdateEmployeeRole = () => {
+    queries.AddNewEmployeeQuery().then(([res]) => {
+        const employees = res;
+        const choices = employees.map((el) => ({
+            name: `${el.first_name} ${el.last_name}`,
+            value: el.id,
+        }));
 
+        prompt({
+            type: "list",
+            name: "employeeID",
+            message: "Which employee's role do you want to update?",
+            choices: choices,
+        }).then((res) => {
+            const employeeID = res.employeeID;
 
+            queries.ViewAllRolesQuery().then(([res]) => {
+                let roles = res;
+                const choices = roles.map((el) => ({
+                    name: el.title,
+                    value: el.id,
+                }));
 
+                prompt({
+                    type: "list",
+                    name: "roleID",
+                    message: "Which role do you want to give this employee?",
+                    choices: choices,
+                })
+                    .then((res) =>
+                        queries.UpdateEmployeeRoleQuery(employeeID, res.roleID)
+                    )
+                    .then(console.log("The employee's role was updated."))
+                    .then(() => startQuestion());
+            });
+        });
+    });
+};
 
+const Quit = () => {
+    process.exit();
+};
 
-
-
-
-
-//             {
-//                 type: "input",
-//                 name: "add_department",
-//                 message: "What is the name of the department?",
-//                 when: (answers) => answers.action === "Add Department",
-//             },
-//             {
-//                 type: "input",
-//                 name: "add_role_name",
-//                 message: "What is the name of the role?",
-//                 when: (answers) => answers.action === "Add Role",
-//             },
-//             {
-//                 type: "input",
-//                 name: "add_role_salary",
-//                 message: "What is the salary of the role?",
-//                 when: (answers) => answers.action === "Add Role",
-//             },
-//             {
-//                 type: "list",
-//                 name: "add_role_dept",
-//                 message: "Which department does the role belong to?",
-//                 choices: getAllRolesArray(),
-//                 when: (answers) => answers.action === "Add Role",
-//             },
-//             {
-//                 type: "input",
-//                 name: "add_employee_fn",
-//                 message: "What is the employee's first name?",
-//                 when: (answers) => answers.action === "Add Employee",
-//             },
-//             {
-//                 type: "input",
-//                 name: "add_employee_ln",
-//                 message: "What is the employee's last name?",
-//                 when: (answers) => answers.action === "Add Employee",
-//             },
-//             {
-//                 type: "list",
-//                 name: "add_employee_title",
-//                 message: "What is the employee's role?",
-//                 choices: getAllRolesArray(),
-//                 when: (answers) => answers.action === "Add Employee",
-//             },
-//             {
-//                 type: "list",
-//                 name: "add_employee_manager",
-//                 message: "Who is the employee's manager?",
-//                 choices: [], //need this to be dynamically filled from SQL
-//                 when: (answers) => answers.action === "Add Employee",
-//             },
-//             {
-//                 type: "list",
-//                 name: "update_employee_select",
-//                 message: "Which employee's role do you want to update?",
-//                 choices: [], //need this to be dynamically filled from SQL
-//                 when: (answers) => answers.action === "Update Employee Role",
-//             },
-//             {
-//                 type: "list",
-//                 name: "update_employee_role",
-//                 message:
-//                     "Which role do you want to assign the selected employee?",
-//                 choices: [], //need this to be dynamically filled from SQL
-//                 when: (answers) => answers.action === "Update Employee Role",
-//             },
-//         ])
-//         .then((response) => {
-//             switch (response.action) {
-//                 case "Quit":
-//                     return;
-//                 case "View All Employees":
-//                     return;
-//                 case "Update Employee Role":
-//                     return;
-//                 case "View All Roles":
-//                     return;
-//                 case "Add Role":
-//                     return;
-//                 case "View All Departments":
-//                     return;
-//                 case "Add Department":
-//                     return;
-//             }
-//         });
-// };
-
-// // use switch statements above
-// // need to create array and update it every time there's a new dept, or delete a dept. should also have access to number value for table
-// // need array for roles and depts
-
-// // employeeAdd();
-
+// initially start the program when "node index" is called
 startQuestion();
