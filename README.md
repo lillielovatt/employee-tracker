@@ -23,6 +23,9 @@ update [tablename] set [param-to-update]=? where [unique id]=?
 
 
 
+- NEED TO BE ABLE TO RETRIEVE MYSQL DATA, CAN PRINT CONSOLE.TABLE BUT I NEED TO RECEIVE THE INFORMATION FOR
+
+
 
 
 - write read me

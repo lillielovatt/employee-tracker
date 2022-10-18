@@ -21,6 +21,6 @@ con.query
 
     con.query("SELECT * FROM roles", function (err, result, fields) {
         if (err) throw err;
-        console.log(result);
-        console.table(result);
+        // console.log(result);
+        // console.table(result);
     });
